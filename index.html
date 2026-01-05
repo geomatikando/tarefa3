@@ -129,9 +129,9 @@
         /* Grelha de cartas */
         .grelha-cartas {
             display: grid;
-            grid-template-columns: repeat(4, 1fr); /* 4 colunas fixas */
+            grid-template-columns: repeat(2, 1fr); /* 2 colunas verticais */
             gap: 15px;
-            max-width: 1200px;
+            max-width: 900px;
             width: 100%;
             margin-bottom: 30px;
         }
@@ -141,7 +141,7 @@
             background: white;
             border-radius: 12px;
             padding: 20px;
-            min-height: 120px;
+            min-height: 140px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -348,8 +348,9 @@
         /* Responsividade para tablets */
         @media (max-width: 768px) {
             .grelha-cartas {
-                grid-template-columns: repeat(4, 1fr); /* Mantém 4 colunas */
+                grid-template-columns: repeat(2, 1fr); /* Mantém 2 colunas */
                 gap: 10px;
+                max-width: 600px;
             }
 
             .carta {
@@ -378,14 +379,15 @@
 
         @media (max-width: 480px) {
             .grelha-cartas {
-                grid-template-columns: repeat(4, 1fr); /* Mantém 4 colunas mesmo em mobile */
+                grid-template-columns: repeat(2, 1fr); /* Mantém 2 colunas */
                 gap: 8px;
+                max-width: 450px;
             }
 
             .carta {
                 padding: 10px;
-                min-height: 80px;
-                font-size: 0.9em;
+                min-height: 90px;
+                font-size: 0.85em;
             }
 
             h1 {
@@ -415,7 +417,7 @@
     </header>
 
     <div class="instrucoes">
-        <p><strong>📋 Instruções:</strong> Vira as cartas para encontrar os 4 pares entre expressão fatorada e expressão desenvolvida. Usa a tua memória!</p>
+        <p><strong>📋 Instruções:</strong> Vira as cartas para encontrares os pares correspondentes entre a expressão algébrica e o respetivo polinómio reduzido.</p>
     </div>
 
     <!-- Painel de estatísticas -->
@@ -453,24 +455,33 @@
         // ============================================================
         // CONFIGURAÇÃO DAS CARTAS
         // ============================================================
-        // Aqui podes adicionar, remover ou editar cartas facilmente.
-        // Cada par tem o mesmo 'idPar'.
+        // ORDEM FIXA: Coluna esquerda (fatoradas) | Coluna direita (desenvolvidas)
         
         const cartas = [
-            // Par 1: (x-2)(x+2) - Verde 🟢
+            // COLUNA ESQUERDA - Formas fatoradas (de cima para baixo)
+            // Carta 1 - Linha 1, Coluna Esquerda
             { id: 1, expressao: '(x - 2)(x + 2)', idPar: 1 },
+            
+            // COLUNA DIREITA - Formas desenvolvidas (ordem alterada)
+            // Carta 2 - Linha 1, Coluna Direita
             { id: 2, expressao: 'x^2 - 4', idPar: 1 },
             
-            // Par 2: (4-2x)(4+2x) - Vermelho 🔴
+            // Carta 3 - Linha 2, Coluna Esquerda
             { id: 3, expressao: '(4 - 2x)(4 + 2x)', idPar: 2 },
-            { id: 4, expressao: '16 - 4x^2', idPar: 2 },
             
-            // Par 3: (4/3+x)(4/3-x) - Laranja 🟠
+            // Carta 4 - Linha 2, Coluna Direita (alterada)
+            { id: 4, expressao: '\\frac{16}{9} - x^2', idPar: 4 },
+            
+            // Carta 5 - Linha 3, Coluna Esquerda
             { id: 5, expressao: '\\left(\\frac{4}{3} + x\\right)\\left(\\frac{4}{3} - x\\right)', idPar: 4 },
-            { id: 6, expressao: '\\frac{16}{9} - x^2', idPar: 4 },
             
-            // Par 4: (x+√3y)(x-√3y) - Roxo 🟣
+            // Carta 6 - Linha 3, Coluna Direita (alterada)
+            { id: 6, expressao: '16 - 4x^2', idPar: 2 },
+            
+            // Carta 7 - Linha 4, Coluna Esquerda
             { id: 7, expressao: '(x + \\sqrt{3}y)(x - \\sqrt{3}y)', idPar: 5 },
+            
+            // Carta 8 - Linha 4, Coluna Direita
             { id: 8, expressao: 'x^2 - 3y^2', idPar: 5 }
         ];
 
@@ -602,9 +613,9 @@
             atualizarDisplayTentativas();
             atualizarDisplayPontuacao();
             
-            // Baralha e renderiza as cartas
-            const cartasBaralhadas = baralhar([...cartas]);
-            renderizarCartas(cartasBaralhadas);
+            // Renderiza as cartas NA ORDEM FIXA (sem baralhar)
+            // Coluna esquerda: formas fatoradas | Coluna direita: formas desenvolvidas
+            renderizarCartas(cartas);
             
             // Inicia o cronómetro
             iniciarCronometro();
