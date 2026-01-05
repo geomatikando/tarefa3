@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo de Memória - Encontra os pares coloridos correspondentes!</title>
+    
+    <!-- MathJax para renderizar expressões matemáticas em LaTeX -->
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Cabeçalho do jogo */
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 2.2em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            margin-bottom: 10px;
+        }
+
+        /* Área de instruções */
+        .instrucoes {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 20px;
+            border-radius: 10px;
+            max-width: 800px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        .instrucoes p {
+            font-size: 1.1em;
+            line-height: 1.5;
+            color: #333;
+        }
+
+        /* Painel de estatísticas */
+        .painel-stats {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 25px;
+            border-radius: 10px;
+            max-width: 800px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+            min-width: 120px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+            text-transform: uppercase;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-valor {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .stat-valor.tempo {
+            color: #2196F3;
+        }
+
+        .stat-valor.tentativas {
+            color: #FF9800;
+        }
+
+        .stat-valor.pontuacao {
+            color: #4CAF50;
+        }
+
+        /* Botão Novo Jogo */
+        .controles {
+            margin-bottom: 20px;
+        }
+
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0,0,0,0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        /* Grelha de cartas */
+        .grelha-cartas {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr); /* 4 colunas fixas */
+            gap: 15px;
+            max-width: 1200px;
+            width: 100%;
+            margin-bottom: 30px;
+        }
+
+        /* Estilos das cartas */
+        .carta {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border: 3px solid transparent;
+            font-size: 1.1em;
+            position: relative;
+        }
+
+        /* Carta virada para baixo (verso) */
+        .carta.virada-baixo {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #5a67d8;
+        }
+
+        .carta.virada-baixo::before {
+            content: "?";
+            font-size: 3em;
+            font-weight: bold;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        /* Esconde o conteúdo quando está virada para baixo */
+        .carta.virada-baixo > * {
+            display: none;
+        }
+
+        .carta:hover:not(.bloqueada):not(.virada-baixo) {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+        }
+
+        /* Efeito hover no verso */
+        .carta.virada-baixo:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+
+        /* Carta que forma par correto */
+        .carta.par-correto {
+            cursor: default;
+            animation: pulso-sucesso 0.6s ease;
+        }
+
+        /* Cores diferentes para cada par correto */
+        .carta.par-correto.cor-par-1 {
+            border-color: #4CAF50;
+            background: #E8F5E9;
+        }
+
+        .carta.par-correto.cor-par-2 {
+            border-color: #E91E63;
+            background: #FCE4EC;
+        }
+
+        .carta.par-correto.cor-par-3 {
+            border-color: #2196F3;
+            background: #E3F2FD;
+        }
+
+        .carta.par-correto.cor-par-4 {
+            border-color: #FF9800;
+            background: #FFF3E0;
+        }
+
+        .carta.par-correto.cor-par-5 {
+            border-color: #9C27B0;
+            background: #F3E5F5;
+        }
+
+        .carta.par-correto.cor-par-6 {
+            border-color: #00BCD4;
+            background: #E0F7FA;
+        }
+
+        .carta.par-correto.cor-par-7 {
+            border-color: #FF5722;
+            background: #FBE9E7;
+        }
+
+        .carta.par-correto.cor-par-8 {
+            border-color: #CDDC39;
+            background: #F9FBE7;
+        }
+
+        .carta.par-correto.cor-par-9 {
+            border-color: #607D8B;
+            background: #ECEFF1;
+        }
+
+        .carta.par-correto.cor-par-10 {
+            border-color: #795548;
+            background: #EFEBE9;
+        }
+
+        /* Carta bloqueada (já emparelhada) */
+        .carta.bloqueada {
+            opacity: 0.6;
+            cursor: default;
+            pointer-events: none;
+        }
+
+        /* Animação de sucesso */
+        @keyframes pulso-sucesso {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes aparecer {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Mensagens de feedback */
+        .mensagem {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px 50px;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            z-index: 1000;
+            display: none;
+            text-align: center;
+        }
+
+        .mensagem.ativa {
+            display: block;
+            animation: aparecer 0.3s ease;
+        }
+
+        .mensagem h2 {
+            margin-bottom: 15px;
+            font-size: 2em;
+        }
+
+        .mensagem.sucesso h2 {
+            color: #4CAF50;
+        }
+
+        .mensagem.erro h2 {
+            color: #f44336;
+        }
+
+        .mensagem button {
+            margin-top: 15px;
+            padding: 10px 25px;
+            font-size: 1em;
+        }
+
+        /* Relatório final */
+        .relatorio {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            text-align: left;
+        }
+
+        .relatorio h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .relatorio-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #ddd;
+            font-size: 1.1em;
+        }
+
+        .relatorio-item:last-child {
+            border-bottom: none;
+        }
+
+        .relatorio-label {
+            color: #666;
+            font-weight: bold;
+        }
+
+        .relatorio-valor {
+            color: #333;
+            font-weight: bold;
+        }
+
+        .mensagem-motivadora {
+            margin-top: 15px;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+            font-size: 1.2em;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        /* Responsividade para tablets */
+        @media (max-width: 768px) {
+            .grelha-cartas {
+                grid-template-columns: repeat(4, 1fr); /* Mantém 4 colunas */
+                gap: 10px;
+            }
+
+            .carta {
+                padding: 15px;
+                min-height: 100px;
+                font-size: 1em;
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+
+            .painel-stats {
+                padding: 12px 15px;
+                gap: 10px;
+            }
+
+            .stat-item {
+                min-width: 100px;
+            }
+
+            .stat-valor {
+                font-size: 1.5em;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .grelha-cartas {
+                grid-template-columns: repeat(4, 1fr); /* Mantém 4 colunas mesmo em mobile */
+                gap: 8px;
+            }
+
+            .carta {
+                padding: 10px;
+                min-height: 80px;
+                font-size: 0.9em;
+            }
+
+            h1 {
+                font-size: 1.2em;
+            }
+
+            .painel-stats {
+                flex-direction: row;
+                gap: 8px;
+                padding: 10px;
+            }
+
+            .stat-item {
+                min-width: auto;
+                flex: 1;
+            }
+
+            .stat-valor {
+                font-size: 1.3em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🎮 Jogo de Memória - Encontra os pares coloridos correspondentes!</h1>
+    </header>
+
+    <div class="instrucoes">
+        <p><strong>📋 Instruções:</strong> Vira as cartas para encontrar os 4 pares entre expressão fatorada e expressão desenvolvida. Usa a tua memória!</p>
+    </div>
+
+    <!-- Painel de estatísticas -->
+    <div class="painel-stats">
+        <div class="stat-item">
+            <div class="stat-label">⏱️ Tempo</div>
+            <div class="stat-valor tempo" id="tempo-display">0:00</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-label">🎯 Tentativas</div>
+            <div class="stat-valor tentativas" id="tentativas-display">0</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-label">⭐ Pontuação</div>
+            <div class="stat-valor pontuacao" id="pontuacao-display">1000</div>
+        </div>
+    </div>
+
+    <div class="controles">
+        <button onclick="novoJogo()">🔄 Novo Jogo</button>
+    </div>
+
+    <div class="grelha-cartas" id="grelha">
+        <!-- As cartas serão geradas aqui pelo JavaScript -->
+    </div>
+
+    <!-- Mensagem de feedback -->
+    <div class="mensagem" id="mensagem">
+        <h2 id="mensagem-titulo"></h2>
+        <p id="mensagem-texto"></p>
+        <button onclick="fecharMensagem()">OK</button>
+    </div>
+
+    <script>
+        // ============================================================
+        // CONFIGURAÇÃO DAS CARTAS
+        // ============================================================
+        // Aqui podes adicionar, remover ou editar cartas facilmente.
+        // Cada par tem o mesmo 'idPar'.
+        
+        const cartas = [
+            // Par 1: (x-2)(x+2) - Verde 🟢
+            { id: 1, expressao: '(x - 2)(x + 2)', idPar: 1 },
+            { id: 2, expressao: 'x^2 - 4', idPar: 1 },
+            
+            // Par 2: (4-2x)(4+2x) - Vermelho 🔴
+            { id: 3, expressao: '(4 - 2x)(4 + 2x)', idPar: 2 },
+            { id: 4, expressao: '16 - 4x^2', idPar: 2 },
+            
+            // Par 3: (4/3+x)(4/3-x) - Laranja 🟠
+            { id: 5, expressao: '\\left(\\frac{4}{3} + x\\right)\\left(\\frac{4}{3} - x\\right)', idPar: 4 },
+            { id: 6, expressao: '\\frac{16}{9} - x^2', idPar: 4 },
+            
+            // Par 4: (x+√3y)(x-√3y) - Roxo 🟣
+            { id: 7, expressao: '(x + \\sqrt{3}y)(x - \\sqrt{3}y)', idPar: 5 },
+            { id: 8, expressao: 'x^2 - 3y^2', idPar: 5 }
+        ];
+
+        // ============================================================
+        // VARIÁVEIS DO JOGO
+        // ============================================================
+        let cartasSelecionadas = []; // Guarda as cartas selecionadas (máximo 2)
+        let paresEncontrados = 0; // Contador de pares corretos
+        let aguardandoResposta = false; // Bloqueia cliques durante animação
+
+        // ============================================================
+        // VARIÁVEIS DE PONTUAÇÃO E TEMPO
+        // ============================================================
+        // PARÂMETROS CONFIGURÁVEIS - Altere aqui para ajustar o sistema de pontuação
+        const PONTUACAO_INICIAL = 1000; // Pontuação inicial
+        const PENALIDADE_ERRO = 10; // Pontos subtraídos por tentativa incorreta
+        
+        let tempoDecorrido = 0; // Tempo em segundos
+        let tentativas = 0; // Número total de tentativas
+        let pontuacao = PONTUACAO_INICIAL; // Pontuação atual
+        let cronometroInterval = null; // Referência para o intervalo do cronómetro
+
+        // ============================================================
+        // FUNÇÕES PRINCIPAIS
+        // ============================================================
+
+        /**
+         * Inicia o cronómetro
+         */
+        function iniciarCronometro() {
+            // Para o cronómetro anterior se existir
+            if (cronometroInterval) {
+                clearInterval(cronometroInterval);
+            }
+            
+            tempoDecorrido = 0;
+            cronometroInterval = setInterval(() => {
+                tempoDecorrido++;
+                atualizarDisplayTempo();
+            }, 1000);
+        }
+
+        /**
+         * Para o cronómetro
+         */
+        function pararCronometro() {
+            if (cronometroInterval) {
+                clearInterval(cronometroInterval);
+                cronometroInterval = null;
+            }
+        }
+
+        /**
+         * Formata o tempo em MM:SS
+         */
+        function formatarTempo(segundos) {
+            const minutos = Math.floor(segundos / 60);
+            const segs = segundos % 60;
+            return `${minutos}:${segs.toString().padStart(2, '0')}`;
+        }
+
+        /**
+         * Atualiza o display do tempo
+         */
+        function atualizarDisplayTempo() {
+            document.getElementById('tempo-display').textContent = formatarTempo(tempoDecorrido);
+        }
+
+        /**
+         * Atualiza o display de tentativas
+         */
+        function atualizarDisplayTentativas() {
+            document.getElementById('tentativas-display').textContent = tentativas;
+        }
+
+        /**
+         * Atualiza o display de pontuação
+         */
+        function atualizarDisplayPontuacao() {
+            const display = document.getElementById('pontuacao-display');
+            display.textContent = pontuacao;
+            
+            // Animação quando perde pontos
+            if (pontuacao < PONTUACAO_INICIAL) {
+                display.style.animation = 'none';
+                setTimeout(() => {
+                    display.style.animation = 'pulso-sucesso 0.3s ease';
+                }, 10);
+            }
+        }
+
+        /**
+         * Gera mensagem motivadora baseada na pontuação
+         */
+        function gerarMensagemMotivadora(pontos) {
+            if (pontos >= 950) {
+                return "🏆 Excelente! Desempenho perfeito!";
+            } else if (pontos >= 850) {
+                return "🌟 Muito bom! Continua assim!";
+            } else if (pontos >= 750) {
+                return "👍 Bom trabalho!";
+            } else if (pontos >= 650) {
+                return "💪 Bom esforço! Podes melhorar!";
+            } else {
+                return "📚 Tenta melhorar o teu tempo e reduzir os erros!";
+            }
+        }
+
+        // ============================================================
+        // FUNÇÕES PRINCIPAIS
+        // ============================================================
+
+        /**
+         * Inicia um novo jogo
+         */
+        function novoJogo() {
+            // Reset das variáveis
+            cartasSelecionadas = [];
+            paresEncontrados = 0;
+            aguardandoResposta = false;
+            
+            // Reset das estatísticas
+            tempoDecorrido = 0;
+            tentativas = 0;
+            pontuacao = PONTUACAO_INICIAL;
+            
+            // Atualiza displays
+            atualizarDisplayTempo();
+            atualizarDisplayTentativas();
+            atualizarDisplayPontuacao();
+            
+            // Baralha e renderiza as cartas
+            const cartasBaralhadas = baralhar([...cartas]);
+            renderizarCartas(cartasBaralhadas);
+            
+            // Inicia o cronómetro
+            iniciarCronometro();
+        }
+
+        /**
+         * Baralha um array (algoritmo Fisher-Yates)
+         */
+        function baralhar(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        /**
+         * Renderiza as cartas na grelha
+         */
+        function renderizarCartas(cartasArray) {
+            const grelha = document.getElementById('grelha');
+            grelha.innerHTML = '';
+
+            cartasArray.forEach(carta => {
+                const divCarta = document.createElement('div');
+                divCarta.className = 'carta virada-baixo'; // Inicia virada para baixo
+                divCarta.dataset.id = carta.id;
+                divCarta.dataset.idPar = carta.idPar;
+                divCarta.dataset.virada = 'false'; // Estado inicial
+                
+                // Usa MathJax para renderizar a expressão (escondida inicialmente)
+                divCarta.innerHTML = `\\(${carta.expressao}\\)`;
+                
+                divCarta.onclick = () => clicarCarta(divCarta);
+                grelha.appendChild(divCarta);
+            });
+
+            // Atualiza o MathJax para renderizar todas as expressões
+            MathJax.typesetPromise([grelha]);
+        }
+
+        /**
+         * Trata o clique numa carta
+         */
+        function clicarCarta(elementoCarta) {
+            // Ignora cliques se estiver aguardando ou se a carta já está bloqueada
+            if (aguardandoResposta || elementoCarta.classList.contains('bloqueada')) {
+                return;
+            }
+
+            // Ignora se a carta já está virada para cima (mas não bloqueada)
+            if (elementoCarta.dataset.virada === 'true' && !elementoCarta.classList.contains('bloqueada')) {
+                return;
+            }
+
+            // Se já há 2 cartas selecionadas, ignora
+            if (cartasSelecionadas.length >= 2) {
+                return;
+            }
+
+            // Vira a carta para cima
+            virarCarta(elementoCarta, true);
+            cartasSelecionadas.push(elementoCarta);
+
+            // Se selecionou 2 cartas, verifica se formam par
+            if (cartasSelecionadas.length === 2) {
+                verificarPar();
+            }
+        }
+
+        /**
+         * Vira uma carta para cima ou para baixo
+         */
+        function virarCarta(elementoCarta, virarParaCima) {
+            if (virarParaCima) {
+                elementoCarta.classList.remove('virada-baixo');
+                elementoCarta.dataset.virada = 'true';
+            } else {
+                elementoCarta.classList.add('virada-baixo');
+                elementoCarta.dataset.virada = 'false';
+            }
+        }
+
+        /**
+         * Verifica se as duas cartas selecionadas formam um par
+         */
+        function verificarPar() {
+            aguardandoResposta = true;
+
+            const [carta1, carta2] = cartasSelecionadas;
+            const idPar1 = carta1.dataset.idPar;
+            const idPar2 = carta2.dataset.idPar;
+
+            // Incrementa tentativas
+            tentativas++;
+            atualizarDisplayTentativas();
+
+            // Verifica se ambas pertencem ao mesmo par
+            if (idPar1 === idPar2) {
+                // PAR CORRETO! Mantém viradas e adiciona cor
+                setTimeout(() => {
+                    // Adiciona classe de par correto com cor específica
+                    const classeCor = `cor-par-${idPar1}`;
+                    carta1.classList.add('par-correto', 'bloqueada', classeCor);
+                    carta2.classList.add('par-correto', 'bloqueada', classeCor);
+                    
+                    paresEncontrados++;
+                    cartasSelecionadas = [];
+                    aguardandoResposta = false;
+
+                    // Verifica se encontrou todos os pares
+                    verificarFimDeJogo();
+                }, 500);
+            } else {
+                // NÃO FORMAM PAR - PENALIZA e vira de volta
+                pontuacao = Math.max(0, pontuacao - PENALIDADE_ERRO);
+                atualizarDisplayPontuacao();
+                
+                setTimeout(() => {
+                    // Vira as cartas de volta para baixo
+                    virarCarta(carta1, false);
+                    virarCarta(carta2, false);
+                    cartasSelecionadas = [];
+                    aguardandoResposta = false;
+                }, 1200); // Dá mais tempo para memorizar
+            }
+        }
+
+        /**
+         * Verifica se todos os pares foram encontrados
+         */
+        function verificarFimDeJogo() {
+            // Total de pares possíveis (agora são sempre 4 pares)
+            const totalPares = cartas.length / 2;
+
+            if (paresEncontrados === totalPares) {
+                // Todos os pares encontrados! Para o cronómetro
+                pararCronometro();
+                
+                // Mostra relatório final diretamente
+                setTimeout(() => {
+                    const mensagemMotivadora = gerarMensagemMotivadora(pontuacao);
+                    const relatorioHTML = `
+                        <div class="relatorio">
+                            <h3>📊 Relatório Final</h3>
+                            <div class="relatorio-item">
+                                <span class="relatorio-label">⏱️ Tempo Total:</span>
+                                <span class="relatorio-valor">${formatarTempo(tempoDecorrido)}</span>
+                            </div>
+                            <div class="relatorio-item">
+                                <span class="relatorio-label">🎯 Tentativas:</span>
+                                <span class="relatorio-valor">${tentativas}</span>
+                            </div>
+                            <div class="relatorio-item">
+                                <span class="relatorio-label">⭐ Pontuação Final:</span>
+                                <span class="relatorio-valor">${pontuacao} pontos</span>
+                            </div>
+                        </div>
+                        <div class="mensagem-motivadora">
+                            ${mensagemMotivadora}
+                        </div>
+                    `;
+                    
+                    mostrarMensagem(
+                        'sucesso',
+                        '🎉 Parabéns!',
+                        'Encontraste todos os pares corretamente!',
+                        relatorioHTML
+                    );
+                }, 800);
+            }
+        }
+
+        /**
+         * Mostra uma mensagem de feedback
+         */
+        function mostrarMensagem(tipo, titulo, texto, htmlAdicional = '') {
+            const mensagem = document.getElementById('mensagem');
+            const mensagemTitulo = document.getElementById('mensagem-titulo');
+            const mensagemTexto = document.getElementById('mensagem-texto');
+
+            mensagem.className = `mensagem ativa ${tipo}`;
+            mensagemTitulo.textContent = titulo;
+            mensagemTexto.textContent = texto;
+            
+            // Adiciona HTML adicional (relatório) se fornecido
+            if (htmlAdicional) {
+                mensagemTexto.insertAdjacentHTML('afterend', htmlAdicional);
+            }
+        }
+
+        /**
+         * Fecha a mensagem de feedback
+         */
+        function fecharMensagem() {
+            const mensagem = document.getElementById('mensagem');
+            mensagem.classList.remove('ativa');
+            
+            // Remove relatórios antigos
+            const relatorios = mensagem.querySelectorAll('.relatorio, .mensagem-motivadora');
+            relatorios.forEach(r => r.remove());
+        }
+
+        // ============================================================
+        // INICIALIZAÇÃO
+        // ============================================================
+        // Inicia o jogo quando a página carrega
+        window.onload = () => {
+            novoJogo();
+        };
+    </script>
+</body>
+</html>
