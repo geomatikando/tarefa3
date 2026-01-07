@@ -54,77 +54,7 @@
             color: #333;
         }
 
-        /* Painel de estatísticas */
-        .painel-stats {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 15px 25px;
-            border-radius: 10px;
-            max-width: 800px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-            display: flex;
-            justify-content: space-around;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .stat-item {
-            text-align: center;
-            min-width: 120px;
-        }
-
-        .stat-label {
-            font-size: 0.9em;
-            color: #666;
-            text-transform: uppercase;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .stat-valor {
-            font-size: 1.8em;
-            font-weight: bold;
-            color: #333;
-        }
-
-        .stat-valor.tempo {
-            color: #2196F3;
-        }
-
-        .stat-valor.tentativas {
-            color: #FF9800;
-        }
-
-        .stat-valor.pontuacao {
-            color: #4CAF50;
-        }
-
-        /* Botão Novo Jogo */
-        .controles {
-            margin-bottom: 20px;
-        }
-
-        button {
-            background: #4CAF50;
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            font-size: 1.2em;
-            border-radius: 8px;
-            cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-            transition: all 0.3s ease;
-        }
-
-        button:hover {
-            background: #45a049;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 8px rgba(0,0,0,0.3);
-        }
-
-        button:active {
-            transform: translateY(0);
-        }
+        /* Botão Novo Jogo - REMOVIDO */
 
         /* Grelha de cartas */
         .grelha-cartas {
@@ -292,9 +222,18 @@
         }
 
         .mensagem button {
-            margin-top: 15px;
+            background: #4CAF50;
+            color: white;
+            border: none;
             padding: 10px 25px;
             font-size: 1em;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .mensagem button:hover {
+            background: #45a049;
         }
 
         /* Relatório final */
@@ -362,19 +301,6 @@
             h1 {
                 font-size: 1.5em;
             }
-
-            .painel-stats {
-                padding: 12px 15px;
-                gap: 10px;
-            }
-
-            .stat-item {
-                min-width: 100px;
-            }
-
-            .stat-valor {
-                font-size: 1.5em;
-            }
         }
 
         @media (max-width: 480px) {
@@ -393,21 +319,6 @@
             h1 {
                 font-size: 1.2em;
             }
-
-            .painel-stats {
-                flex-direction: row;
-                gap: 8px;
-                padding: 10px;
-            }
-
-            .stat-item {
-                min-width: auto;
-                flex: 1;
-            }
-
-            .stat-valor {
-                font-size: 1.3em;
-            }
         }
     </style>
 </head>
@@ -418,26 +329,6 @@
 
     <div class="instrucoes">
         <p><strong>📋 Instruções:</strong> Vira as cartas para encontrares os pares correspondentes entre a expressão algébrica e o respetivo polinómio reduzido.</p>
-    </div>
-
-    <!-- Painel de estatísticas -->
-    <div class="painel-stats">
-        <div class="stat-item">
-            <div class="stat-label">⏱️ Tempo</div>
-            <div class="stat-valor tempo" id="tempo-display">0:00</div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-label">🎯 Tentativas</div>
-            <div class="stat-valor tentativas" id="tentativas-display">0</div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-label">⭐ Pontuação</div>
-            <div class="stat-valor pontuacao" id="pontuacao-display">1000</div>
-        </div>
-    </div>
-
-    <div class="controles">
-        <button onclick="novoJogo()">🔄 Novo Jogo</button>
     </div>
 
     <div class="grelha-cartas" id="grelha">
@@ -547,30 +438,25 @@
          * Atualiza o display do tempo
          */
         function atualizarDisplayTempo() {
-            document.getElementById('tempo-display').textContent = formatarTempo(tempoDecorrido);
+            // Display removido - função mantida para compatibilidade
+            // document.getElementById('tempo-display').textContent = formatarTempo(tempoDecorrido);
         }
 
         /**
          * Atualiza o display de tentativas
          */
         function atualizarDisplayTentativas() {
-            document.getElementById('tentativas-display').textContent = tentativas;
+            // Display removido - função mantida para compatibilidade
+            // document.getElementById('tentativas-display').textContent = tentativas;
         }
 
         /**
          * Atualiza o display de pontuação
          */
         function atualizarDisplayPontuacao() {
-            const display = document.getElementById('pontuacao-display');
-            display.textContent = pontuacao;
-            
-            // Animação quando perde pontos
-            if (pontuacao < PONTUACAO_INICIAL) {
-                display.style.animation = 'none';
-                setTimeout(() => {
-                    display.style.animation = 'pulso-sucesso 0.3s ease';
-                }, 10);
-            }
+            // Display removido - função mantida para compatibilidade
+            // const display = document.getElementById('pontuacao-display');
+            // display.textContent = pontuacao;
         }
 
         /**
@@ -603,15 +489,10 @@
             paresEncontrados = 0;
             aguardandoResposta = false;
             
-            // Reset das estatísticas
+            // Reset das estatísticas (mantém no backend)
             tempoDecorrido = 0;
             tentativas = 0;
             pontuacao = PONTUACAO_INICIAL;
-            
-            // Atualiza displays
-            atualizarDisplayTempo();
-            atualizarDisplayTentativas();
-            atualizarDisplayPontuacao();
             
             // Renderiza as cartas NA ORDEM FIXA (sem baralhar)
             // Coluna esquerda: formas fatoradas | Coluna direita: formas desenvolvidas
@@ -709,9 +590,8 @@
             const idPar1 = carta1.dataset.idPar;
             const idPar2 = carta2.dataset.idPar;
 
-            // Incrementa tentativas
+            // Incrementa tentativas (mantém no backend)
             tentativas++;
-            atualizarDisplayTentativas();
 
             // Verifica se ambas pertencem ao mesmo par
             if (idPar1 === idPar2) {
@@ -732,7 +612,6 @@
             } else {
                 // NÃO FORMAM PAR - PENALIZA e vira de volta
                 pontuacao = Math.max(0, pontuacao - PENALIDADE_ERRO);
-                atualizarDisplayPontuacao();
                 
                 setTimeout(() => {
                     // Vira as cartas de volta para baixo
